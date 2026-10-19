@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>기초 독일어 어휘 100</title>
+<style>
+  * { box-sizing: border-box; }
+  :root { padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  body { margin: 0; padding: 28px 16px 40px; background: #f7f5f0; color: #222;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans KR", sans-serif; }
+  header { max-width: 900px; margin: 0 auto 22px; text-align: center; }
+  header h1 { font-size: 22px; margin: 0 0 6px; }
+  header p { margin: 0 0 14px; color: #888; font-size: 14px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; margin-bottom: 14px; }
+  .chip { border: 1px solid #ddd; background: #fff; color: #444; font-size: 13px; padding: 6px 12px; border-radius: 999px; cursor: pointer; }
+  .chip.on { background: #222; color: #fff; border-color: #222; }
+  .refresh-btn { border: none; background: #222; color: #fff; font-size: 14px; padding: 10px 20px; border-radius: 999px; cursor: pointer; }
+  .refresh-btn:hover { background: #444; }
+  #cards { display: flex; gap: 20px; overflow-x: auto; scroll-snap-type: x mandatory; padding: 6px 6px 20px; -webkit-overflow-scrolling: touch; }
+  #cards::-webkit-scrollbar { height: 8px; }
+  #cards::-webkit-scrollbar-thumb { background: #ddd; border-radius: 999px; }
+  .card { flex: 0 0 auto; scroll-snap-align: start; width: min(88vw, 560px); background: #fff; border-radius: 20px; padding: 28px; box-shadow: 0 8px 30px rgba(0,0,0,.08); }
+  .pos { display: inline-block; padding: 5px 10px; border-radius: 8px; background: #eee; font-size: 13px; margin: 0 6px 14px 0; }
+  .art-der { background: #dbe8ff; } .art-die { background: #ffdede; } .art-das { background: #dcf3dd; }
+  .word-line { display: flex; align-items: baseline; flex-wrap: wrap; column-gap: 12px; row-gap: 4px; margin-bottom: 4px; }
+  .word { font-size: 32px; font-weight: 700; }
+  .art { font-size: 20px; font-weight: 500; color: #777; }
+  .extra { font-size: 15px; color: #999; }
+  .ipa { font-size: 16px; color: #888; margin-bottom: 14px; }
+  .btns { display: flex; gap: 8px; margin-bottom: 18px; flex-wrap: wrap; }
+  .speak-btn { border: 1px solid #ddd; background: #fff; border-radius: 999px; font-size: 13px; padding: 7px 16px; cursor: pointer; }
+  .speak-btn:hover { background: #f5f5f5; }
+  .meaning-box { padding-top: 16px; border-top: 1px solid #f0f0f0; }
+  .info-label { display: block; font-size: 12px; color: #999; margin-bottom: 8px; }
+  .meaning { font-size: 19px; margin: 0; }
+  .example { border-left: 4px solid #222; padding: 10px 16px; margin: 16px 0 0; background: #fafafa; border-radius: 0 8px 8px 0; }
+  .example .de { font-size: 17px; margin-bottom: 5px; }
+  .example .ko { color: #666; font-size: 15px; }
+  .ex-ipa { display: none; }
+  footer { max-width: 900px; margin: 20px auto 0; text-align: center; color: #bbb; font-size: 12px; }
+  @media (max-width: 480px) { .card { padding: 22px 18px; border-radius: 16px; } .word { font-size: 27px; } .ipa { font-size: 14px; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>기초 독일어 어휘 100 (Grundwortschatz)</h1>
+  <p id="sub">옆으로 스크롤하며 확인하세요</p>
+  <div class="chips" id="chips"></div>
+  <button type="button" id="refreshBtn" class="refresh-btn">🔄 새 단어 보기</button>
+</header>
+
+<div id="cards"></div>
+
+<footer>명사는 성(der/die/das)과 복수형, 동사는 3인칭 단수 현재와 완료형을 함께 표시합니다 · 발음은 브라우저의 독일어 음성을 사용합니다</footer>
+
+<script>
+  // [품사, 관사, 단어, IPA, 뜻, 추가정보, 예문, 번역]
+  const D = [
+    ["n","der","Hund","hʊnt","개","Pl. Hunde","Der Hund schläft im Garten.","개가 정원에서 잔다."],
+    ["n","die","Katze","ˈkatsə","고양이","Pl. Katzen","Die Katze trinkt Milch.","고양이가 우유를 마신다."],
+    ["n","das","Haus","haʊ̯s","집","Pl. Häuser","Das Haus ist sehr alt.","그 집은 매우 오래되었다."],
+    ["n","der","Tisch","tɪʃ","탁자","Pl. Tische","Das Buch liegt auf dem Tisch.","책이 탁자 위에 있다."],
+    ["n","die","Frau","fʁaʊ̯","여자, 아내","Pl. Frauen","Die Frau liest eine Zeitung.","그 여자는 신문을 읽는다."],
+    ["n","der","Mann","man","남자, 남편","Pl. Männer","Der Mann wartet am Bahnhof.","그 남자는 역에서 기다린다."],
+    ["n","das","Kind","kɪnt","아이","Pl. Kinder","Das Kind spielt draußen.","아이가 밖에서 논다."],
+    ["n","das","Wasser","ˈvasɐ","물","Pl. –","Ich trinke gern Wasser.","나는 물 마시는 것을 좋아한다."],
+    ["n","das","Brot","bʁoːt","빵","Pl. Brote","Ich kaufe frisches Brot.","나는 신선한 빵을 산다."],
+    ["n","die","Stadt","ʃtat","도시","Pl. Städte","Berlin ist eine große Stadt.","베를린은 큰 도시다."],
+    ["n","das","Buch","buːx","책","Pl. Bücher","Ich lese ein gutes Buch.","나는 좋은 책을 읽는다."],
+    ["n","die","Zeit","tsaɪ̯t","시간","Pl. Zeiten","Ich habe heute keine Zeit.","나는 오늘 시간이 없다."],
+    ["n","der","Freund","fʁɔʏ̯nt","친구","Pl. Freunde","Mein Freund kommt morgen.","내 친구가 내일 온다."],
+    ["n","die","Schule","ˈʃuːlə","학교","Pl. Schulen","Die Kinder gehen zur Schule.","아이들이 학교에 간다."],
+    ["n","das","Auto","ˈaʊ̯to","자동차","Pl. Autos","Das Auto ist neu.","그 자동차는 새것이다."],
+    ["n","der","Baum","baʊ̯m","나무","Pl. Bäume","Der Baum ist sehr hoch.","그 나무는 매우 높다."],
+    ["n","die","Blume","ˈbluːmə","꽃","Pl. Blumen","Die Blume duftet gut.","그 꽃은 향기가 좋다."],
+    ["n","der","Apfel","ˈapfl̩","사과","Pl. Äpfel","Ich esse einen Apfel.","나는 사과를 하나 먹는다."],
+    ["n","die","Milch","mɪlç","우유","Pl. –","Die Milch ist kalt.","우유가 차갑다."],
+    ["n","das","Fenster","ˈfɛnstɐ","창문","Pl. Fenster","Bitte öffne das Fenster.","창문을 열어 주세요."],
+    ["n","die","Tür","tyːɐ̯","문","Pl. Türen","Die Tür ist zu.","문이 닫혀 있다."],
+    ["n","der","Morgen","ˈmɔʁɡn̩","아침","Pl. Morgen","Am Morgen trinke ich Kaffee.","아침에 나는 커피를 마신다."],
+    ["n","die","Nacht","naxt","밤","Pl. Nächte","Gute Nacht!","안녕히 주무세요!"],
+    ["n","der","Himmel","ˈhɪml̩","하늘","Pl. –","Der Himmel ist blau.","하늘이 파랗다."],
+    ["n","die","Sonne","ˈzɔnə","해, 태양","Pl. Sonnen","Die Sonne scheint heute.","오늘은 해가 비친다."],
+    ["n","das","Geld","ɡɛlt","돈","Pl. –","Ich habe wenig Geld.","나는 돈이 별로 없다."],
+    ["n","die","Arbeit","ˈaʁbaɪ̯t","일, 직장","Pl. Arbeiten","Die Arbeit beginnt um acht.","일은 8시에 시작한다."],
+    ["n","der","Weg","veːk","길","Pl. Wege","Wo ist der Weg zum Bahnhof?","역으로 가는 길이 어디예요?"],
+    ["n","die","Hand","hant","손","Pl. Hände","Gib mir deine Hand.","네 손을 줘."],
+    ["n","das","Herz","hɛʁts","심장, 마음","Pl. Herzen","Sie hat ein gutes Herz.","그녀는 마음이 따뜻하다."],
+    ["n","der","Kaffee","ˈkafe","커피","Pl. –","Ich trinke Kaffee ohne Zucker.","나는 설탕 없이 커피를 마신다."],
+    ["n","die","Sprache","ˈʃpʁaːxə","언어","Pl. Sprachen","Deutsch ist eine schöne Sprache.","독일어는 아름다운 언어다."],
+    ["n","der","Bahnhof","ˈbaːnhoːf","기차역","Pl. Bahnhöfe","Der Bahnhof ist weit.","역은 멀다."],
+    ["n","die","Woche","ˈvɔxə","주(週)","Pl. Wochen","Eine Woche hat sieben Tage.","일주일은 7일이다."],
+    ["n","das","Essen","ˈɛsn̩","음식, 식사","Pl. –","Das Essen schmeckt gut.","음식이 맛있다."],
+    ["n","der","Regen","ˈʁeːɡn̩","비","Pl. –","Der Regen hört nicht auf.","비가 그치지 않는다."],
+
+    ["v","","gehen","ˈɡeːən","가다","geht · ist gegangen","Wir gehen ins Kino.","우리는 영화관에 간다."],
+    ["v","","kommen","ˈkɔmən","오다","kommt · ist gekommen","Woher kommst du?","너는 어디서 왔니?"],
+    ["v","","machen","ˈmaxn̩","하다, 만들다","macht · hat gemacht","Was machst du heute?","너는 오늘 뭐 하니?"],
+    ["v","","sein","zaɪ̯n","~이다, 있다","ist · ist gewesen","Ich bin müde.","나는 피곤하다."],
+    ["v","","haben","ˈhaːbn̩","가지고 있다","hat · hat gehabt","Ich habe einen Bruder.","나는 남자 형제가 한 명 있다."],
+    ["v","","essen","ˈɛsn̩","먹다","isst · hat gegessen","Wir essen zusammen.","우리는 함께 먹는다."],
+    ["v","","trinken","ˈtʁɪŋkn̩","마시다","trinkt · hat getrunken","Er trinkt Tee.","그는 차를 마신다."],
+    ["v","","sehen","ˈzeːən","보다","sieht · hat gesehen","Ich sehe einen Vogel.","나는 새 한 마리를 본다."],
+    ["v","","sprechen","ˈʃpʁɛçn̩","말하다","spricht · hat gesprochen","Sprichst du Englisch?","너는 영어를 하니?"],
+    ["v","","lernen","ˈlɛʁnən","배우다","lernt · hat gelernt","Ich lerne Deutsch.","나는 독일어를 배운다."],
+    ["v","","lesen","ˈleːzn̩","읽다","liest · hat gelesen","Sie liest gern Romane.","그녀는 소설 읽기를 좋아한다."],
+    ["v","","schreiben","ˈʃʁaɪ̯bn̩","쓰다","schreibt · hat geschrieben","Ich schreibe eine E-Mail.","나는 이메일을 쓴다."],
+    ["v","","wohnen","ˈvoːnən","살다, 거주하다","wohnt · hat gewohnt","Ich wohne in Seoul.","나는 서울에 산다."],
+    ["v","","arbeiten","ˈaʁbaɪ̯tn̩","일하다","arbeitet · hat gearbeitet","Er arbeitet bei einer Firma.","그는 회사에서 일한다."],
+    ["v","","spielen","ˈʃpiːlən","놀다, 연주하다","spielt · hat gespielt","Wir spielen Fußball.","우리는 축구를 한다."],
+    ["v","","kaufen","ˈkaʊ̯fn̩","사다","kauft · hat gekauft","Ich kaufe Brot.","나는 빵을 산다."],
+    ["v","","fahren","ˈfaːʁən","타고 가다","fährt · ist gefahren","Ich fahre mit dem Zug.","나는 기차를 타고 간다."],
+    ["v","","geben","ˈɡeːbn̩","주다","gibt · hat gegeben","Gib mir bitte das Salz.","소금 좀 주세요."],
+    ["v","","nehmen","ˈneːmən","가지다, 타다","nimmt · hat genommen","Ich nehme den Bus.","나는 버스를 탄다."],
+    ["v","","wissen","ˈvɪsn̩","알다","weiß · hat gewusst","Ich weiß es nicht.","나는 그걸 모른다."],
+    ["v","","denken","ˈdɛŋkn̩","생각하다","denkt · hat gedacht","Ich denke an dich.","나는 너를 생각한다."],
+    ["v","","lieben","ˈliːbn̩","사랑하다","liebt · hat geliebt","Ich liebe dich.","나는 너를 사랑한다."],
+    ["v","","schlafen","ˈʃlaːfn̩","자다","schläft · hat geschlafen","Das Baby schläft.","아기가 잔다."],
+    ["v","","helfen","ˈhɛlfn̩","돕다","hilft · hat geholfen","Kannst du mir helfen?","나를 도와줄 수 있니?"],
+    ["v","","warten","ˈvaʁtn̩","기다리다","wartet · hat gewartet","Ich warte auf den Bus.","나는 버스를 기다린다."],
+
+    ["a","","groß","ɡʁoːs","큰","größer","Das Haus ist groß.","그 집은 크다."],
+    ["a","","klein","klaɪ̯n","작은","kleiner","Die Katze ist klein.","그 고양이는 작다."],
+    ["a","","gut","ɡuːt","좋은","besser","Das Essen ist gut.","음식이 좋다."],
+    ["a","","schlecht","ʃlɛçt","나쁜","schlechter","Das Wetter ist schlecht.","날씨가 나쁘다."],
+    ["a","","neu","nɔʏ̯","새로운","neuer","Mein Handy ist neu.","내 휴대폰은 새것이다."],
+    ["a","","alt","alt","오래된, 늙은","älter","Der Baum ist alt.","그 나무는 오래되었다."],
+    ["a","","schön","ʃøːn","아름다운","schöner","Die Stadt ist schön.","그 도시는 아름답다."],
+    ["a","","schnell","ʃnɛl","빠른","schneller","Der Zug ist schnell.","그 기차는 빠르다."],
+    ["a","","langsam","ˈlaŋzaːm","느린","langsamer","Bitte sprich langsam.","천천히 말해 주세요."],
+    ["a","","heiß","haɪ̯s","뜨거운","heißer","Der Kaffee ist heiß.","커피가 뜨겁다."],
+    ["a","","kalt","kalt","차가운, 추운","kälter","Heute ist es kalt.","오늘은 춥다."],
+    ["a","","müde","ˈmyːdə","피곤한","müder","Die Kinder sind müde.","아이들이 피곤하다."],
+    ["a","","glücklich","ˈɡlʏklɪç","행복한","glücklicher","Sie ist sehr glücklich.","그녀는 매우 행복하다."],
+    ["a","","teuer","ˈtɔʏ̯ɐ","비싼","teurer","Das Auto ist teuer.","그 자동차는 비싸다."],
+    ["a","","billig","ˈbɪlɪç","싼","billiger","Das Brot ist billig.","그 빵은 싸다."],
+    ["a","","leicht","laɪ̯çt","쉬운, 가벼운","leichter","Die Aufgabe ist leicht.","그 과제는 쉽다."],
+    ["a","","schwer","ʃveːɐ̯","어려운, 무거운","schwerer","Die Tasche ist schwer.","그 가방은 무겁다."],
+    ["a","","jung","jʊŋ","젊은, 어린","jünger","Mein Bruder ist jung.","내 남동생은 어리다."],
+    ["a","","freundlich","ˈfʁɔʏ̯ntlɪç","친절한","freundlicher","Der Lehrer ist freundlich.","선생님은 친절하다."],
+    ["a","","wichtig","ˈvɪçtɪç","중요한","wichtiger","Das ist sehr wichtig.","그것은 매우 중요하다."],
+
+    ["d","","heute","ˈhɔʏ̯tə","오늘","","Heute regnet es.","오늘은 비가 온다."],
+    ["d","","morgen","ˈmɔʁɡn̩","내일","","Morgen habe ich frei.","내일은 쉰다."],
+    ["d","","gestern","ˈɡɛstɐn","어제","","Gestern war ich zu Hause.","어제 나는 집에 있었다."],
+    ["d","","immer","ˈɪmɐ","항상","","Er ist immer pünktlich.","그는 항상 시간을 지킨다."],
+    ["d","","nie","niː","결코 ~않다","","Ich trinke nie Alkohol.","나는 술을 전혀 마시지 않는다."],
+    ["d","","oft","ɔft","자주","","Wir gehen oft spazieren.","우리는 자주 산책한다."],
+    ["d","","vielleicht","fiˈlaɪ̯çt","아마도","","Vielleicht komme ich später.","아마 나중에 갈게."],
+    ["d","","sehr","zeːɐ̯","매우","","Das Essen ist sehr gut.","음식이 아주 맛있다."],
+    ["d","","hier","hiːɐ̯","여기","","Ich wohne hier.","나는 여기에 산다."],
+    ["d","","dort","dɔʁt","저기","","Dort steht mein Auto.","저기에 내 차가 서 있다."],
+    ["d","","jetzt","jɛtst","지금","","Ich muss jetzt gehen.","나는 지금 가야 한다."],
+    ["d","","schon","ʃoːn","이미, 벌써","","Es ist schon spät.","벌써 늦었다."],
+    ["d","","gern","ɡɛʁn","기꺼이, 즐겨","","Ich lese gern.","나는 읽는 것을 좋아한다."],
+
+    ["p","","mit","mɪt","~와 함께 (전치사)","+ Dativ","Ich gehe mit dir.","나는 너와 함께 간다."],
+    ["p","","in","ɪn","~안에 (전치사)","+ Dat./Akk.","Er ist in der Schule.","그는 학교에 있다."],
+    ["c","","aber","ˈaːbɐ","하지만 (접속사)","","Ich mag Tee, aber keinen Kaffee.","나는 차는 좋아하지만 커피는 안 좋아한다."],
+    ["c","","weil","vaɪ̯l","왜냐하면 (접속사)","동사 후치","Ich bleibe, weil es regnet.","비가 오기 때문에 나는 머문다."],
+    ["c","","und","ʊnt","그리고 (접속사)","","Ich und du.","나와 너."],
+    ["r","","ich","ɪç","나 (대명사)","du · er/sie/es","Ich heiße Anna.","내 이름은 안나야."],
+    ["i","","danke","ˈdaŋkə","고마워요","","Danke für deine Hilfe.","도와줘서 고마워."],
+    ["i","","bitte","ˈbɪtə","부탁해요, 천만에요","","Einen Kaffee, bitte.","커피 한 잔 주세요."],
+    ["i","","hallo","haˈloː","안녕","","Hallo, wie geht’s?","안녕, 잘 지내?"]
+  ];
+
+  const POS = { n:["명사","Nomen"], v:["동사","Verb"], a:["형용사","Adjektiv"], d:["부사","Adverb"],
+                p:["전치사","Präposition"], c:["접속사","Konjunktion"], r:["대명사","Pronomen"], i:["감탄사/인사","Interjektion"] };
+  const FILTERS = [["all","전체"],["n","명사"],["v","동사"],["a","형용사"],["d","부사"],["x","기타"]];
+  const PER_SET = 10;
+  let filter = "all";
+
+  const shuffle = a => { for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+
+  function speak(text) {
+    if (!('speechSynthesis' in window)) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.lang = 'de-DE'; u.rate = 0.9;
+    const v = speechSynthesis.getVoices().find(v => v.lang && v.lang.replace('_','-').startsWith('de'));
+    if (v) u.voice = v;
+    speechSynthesis.cancel();
+    speechSynthesis.speak(u);
+  }
+
+  function pool() {
+    return D.filter(w => filter==="all" || (filter==="x" ? !"nvad".includes(w[0]) : w[0]===filter));
+  }
+
+  function buildCard(w) {
+    const [pos, art, word, ipa, ko, extra, ex, exko] = w;
+    const card = document.createElement('main');
+    card.className = 'card';
+    const posLabel = `${POS[pos][0]} · ${POS[pos][1]}`;
+    const artTag = art ? `<span class="pos art-${art}">${art}</span>` : '';
+    card.innerHTML = `
+      <div><span class="pos">${posLabel}</span>${artTag}</div>
+      <div class="word-line">
+        ${art ? `<span class="art">${art}</span>` : ''}
+        <span class="word">${word}</span>
+        ${extra ? `<span class="extra">${extra}</span>` : ''}
+      </div>
+      <div class="ipa">/${ipa}/</div>
+      <div class="btns">
+        <button type="button" class="speak-btn" data-t="${(art?art+' ':'')+word}">🔊 단어 듣기</button>
+        <button type="button" class="speak-btn" data-t="${ex}">🔊 예문 듣기</button>
+      </div>
+      <div class="meaning-box">
+        <span class="info-label">뜻</span>
+        <p class="meaning">${ko}</p>
+      </div>
+      <div class="example">
+        <div class="de">${ex}</div>
+        <div class="ko">${exko}</div>
+      </div>`;
+    card.querySelectorAll('.speak-btn').forEach(b => b.addEventListener('click', () => speak(b.dataset.t)));
+    return card;
+  }
+
+  function render() {
+    const list = pool();
+    const box = document.getElementById('cards');
+    box.innerHTML = '';
+    shuffle([...list]).slice(0, PER_SET).forEach(w => box.appendChild(buildCard(w)));
+    box.scrollTo({ left: 0 });
+    document.getElementById('sub').textContent = `옆으로 스크롤하며 확인하세요 · 총 ${list.length}개 중 무작위 ${Math.min(PER_SET, list.length)}개`;
+  }
+
+  const chips = document.getElementById('chips');
+  FILTERS.forEach(([k, label]) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip' + (k===filter ? ' on' : ''); b.textContent = label;
+    b.addEventListener('click', () => {
+      filter = k;
+      chips.querySelectorAll('.chip').forEach(c => c.classList.toggle('on', c === b));
+      render();
+    });
+    chips.appendChild(b);
+  });
+
+  document.getElementById('refreshBtn').addEventListener('click', render);
+  if ('speechSynthesis' in window) speechSynthesis.getVoices();
+  render();
+</script>
+</body>
+</html>
